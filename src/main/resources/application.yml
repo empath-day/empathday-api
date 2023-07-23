@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: empath-day-api
+  profiles:
+    active: local
+    include:
+      - aws
