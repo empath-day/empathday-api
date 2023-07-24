@@ -2,6 +2,7 @@ spring:
   application:
     name: empath-day-api
   profiles:
-    active: local
+    active: dev
     include:
       - aws
+      - dev
