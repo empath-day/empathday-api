@@ -1,0 +1,139 @@
+name: develop branch CI/CD with docker
+
+on:
+  push:
+    branches: [ "develop" ]
+    
+jobs:
+  ci_cd:
+    runs-on: ubuntu-latest
+    env:
+      DEV_YML: ${{ secrets.DEV_YML }}
+    steps:
+      # jdk setting
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'openjdk'  # https://github.com/actions/setup-java (temurin 권장)
+
+      - name: Gradle Caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            
+      # Upload application-dev.yml to Artifacts
+      - name: Upload application-dev.yml
+        if: contains(github.ref, 'develop')
+        run: |
+          cd ./src/main/resources
+          echo "${{ env.DEV_YML }}" > ./application-dev.yml
+        shell: bash
+        
+        # Artifact에 application-dev.yml 업로드
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: ./src/main/resources/application-dev.yml
+
+      # Download application-dev.yml from Artifacts and update secrets.DEV_YML
+      - name: Download Artifact and Update secrets
+        if: always() # 항상 실행되도록 설정
+        uses: actions/download-artifact@v2
+        with:
+          name: my-artifact
+          path: ./src/main/resources/
+          
+      - name: Update secrets.DEV_YML
+        if: always() # 항상 실행되도록 설정
+        run: |
+          YML_CONTENT=$(<./src/main/resources/application-dev.yml)
+          echo "::set-env name=DEV_YML::$YML_CONTENT"
+
+      # create application-dev.yml
+#       - name: Make application-dev.yml
+#         if: contains(github.ref, 'develop')
+#         run: |
+#           cd ./custom-cake-backend/src/main/resources
+#           touch ./application-dev.yml
+#           echo "${{ env.DEV_YML }}" > ./application-dev.yml
+#         shell: bash
+
+      # gradlew 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # gradle build
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+
+      # Docker login
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Docker Build and Push to develop        
+      - name: docker image Build and push
+        uses: docker/build-push-action@v4
+        with:
+          file: ./Dockerfile-dev
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:latest
+
+      # deploy to develop
+      - name: Deploy to dev
+        uses: appleboy/ssh-action@master
+        id: deploy-dev
+        if: contains(github.ref, 'develop')
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_PASSWORD }}
+          port: 22
+          # key: ${{ secrets.PRIVATE_KEY }}
+          script: "docker-compose pull && docker-compose down && docker-compose up -d"
+
+  # time
+  current-time:
+    needs: ci_cd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Current Time
+        uses: 1466587594/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DDTHH:mm:ss
+          utcOffset: "+09:00"  # KST
+
+      - name: Print Current Time
+        run: echo "Current Time=${{steps.current-time.outputs.formattedTime}}"
+        shell: bash
+
+  # slack alarm
+#   action-slack:
+#     if: ${{ always() }}
+#     needs: ci_cd
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Slack Alarm
+#         uses: 8398a7/action-slack@v3
+#         with:
+#           status: ${{ needs.ci_cd.result }}
+#           author_name: 백엔드 CI/CD to dev
+#           fields: repo,message,commit,author,job,took  # ref: refs/heads/develop
+#         env:
+#           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}  # requied env
+        # if: always()  # even if the job fails or is canceled.
