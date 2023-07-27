@@ -13,7 +13,7 @@ jobs:
       DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
       EC2_HOST_DEV: ${{ secrets.EC2_HOST_DEV }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      EC2_PASSWORD: ${{ secrets.EC2_PASSWORD }}
+      EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
     steps:
       # jdk setting
       - uses: actions/checkout@v3
@@ -106,7 +106,7 @@ jobs:
         with:
           host: ${{ env.EC2_HOST_DEV }}
           username: ${{ env.EC2_USERNAME }}
-          password: ${{ env.EC2_PASSWORD }}
+          password: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
 #           script: "docker-compose pull && docker-compose down && docker-compose up -d"
 
