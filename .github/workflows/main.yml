@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'openjdk'  # https://github.com/actions/setup-java (temurin 권장)
+          distribution: 'openjdk'
 
       - name: Gradle Caching
         uses: actions/cache@v3
