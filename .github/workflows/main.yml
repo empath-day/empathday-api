@@ -14,7 +14,6 @@ jobs:
       EC2_HOST_DEV: ${{ secrets.EC2_HOST_DEV }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-#       SLACK_WEBHOOK_URL_CICD: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
       DOCKER_IMAGE: ghcr.io/${{ github.actor }}/empath
     steps:
       # jdk setting
@@ -23,7 +22,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'openjdk'
+          distribution: 'temurin'
 
       - name: Gradle Caching
         uses: actions/cache@v3
@@ -35,7 +34,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Upload application-dev.yml to Artifacts
       - name: Upload application-dev.yml
         if: contains(github.ref, 'develop')
         run: |
@@ -43,26 +41,25 @@ jobs:
           echo "${{ env.DEV_YML }}" > ./application-dev.yml
         shell: bash
 
-        # Artifact에 application-dev.yml 업로드
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: my-artifact
           path: ./src/main/resources/application-dev.yml
 
-      # Download application-dev.yml from Artifacts and update secrets.DEV_YML
       - name: Download Artifact and Update secrets
-        if: always() # 항상 실행되도록 설정
+        if: always()
         uses: actions/download-artifact@v2
         with:
           name: my-artifact
           path: ./src/main/resources/
 
       - name: Update secrets.DEV_YML
-        if: always() # 항상 실행되도록 설정
+        if: always()
         run: |
           YML_CONTENT=$(<./src/main/resources/application-dev.yml)
-          echo "::set-env name=DEV_YML::$YML_CONTENT"
+          echo "DEV_YML=$YML_CONTENT" >> $GITHUB_ENV
+
 
       # create application-dev.yml
       #       - name: Make application-dev.yml
