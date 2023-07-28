@@ -3,7 +3,7 @@ name: develop branch CI/CD with docker
 on:
   push:
     branches: [ "develop" ]
-    
+
 jobs:
   ci_cd:
     runs-on: ubuntu-latest
@@ -15,6 +15,7 @@ jobs:
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
       SLACK_WEBHOOK_URL_CICD: ${{ SLACK_WEBHOOK_URL_CICD }}
+      DOCKER_IMAGE: ghcr.io/${{ github.actor }}/empath
     steps:
       # jdk setting
       - uses: actions/checkout@v3
@@ -33,7 +34,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-            
+
       # Upload application-dev.yml to Artifacts
       - name: Upload application-dev.yml
         if: contains(github.ref, 'develop')
@@ -41,7 +42,7 @@ jobs:
           cd ./src/main/resources
           echo "${{ env.DEV_YML }}" > ./application-dev.yml
         shell: bash
-        
+
         # Artifact에 application-dev.yml 업로드
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
@@ -56,7 +57,7 @@ jobs:
         with:
           name: my-artifact
           path: ./src/main/resources/
-          
+
       - name: Update secrets.DEV_YML
         if: always() # 항상 실행되도록 설정
         run: |
@@ -64,13 +65,13 @@ jobs:
           echo "::set-env name=DEV_YML::$YML_CONTENT"
 
       # create application-dev.yml
-#       - name: Make application-dev.yml
-#         if: contains(github.ref, 'develop')
-#         run: |
-#           cd ./src/main/resources
-#           touch ./application-dev.yml
-#           echo "${{ env.DEV_YML }}" > ./application-dev.yml
-#         shell: bash
+      #       - name: Make application-dev.yml
+      #         if: contains(github.ref, 'develop')
+      #         run: |
+      #           cd ./src/main/resources
+      #           touch ./application-dev.yml
+      #           echo "${{ env.DEV_YML }}" > ./application-dev.yml
+      #         shell: bash
 
       # gradlew 실행 권한 부여
       - name: Grant execute permission for gradlew
@@ -91,13 +92,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Docker Build and Push to develop        
+      # Docker Build and Push to develop
       - name: docker image Build and push
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile-dev
           push: true
-          tags: ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_REPO }}:latest
+          tags: ${{ env.DOCKER_IMAGE }}:latest
 
       # deploy to develop
       - name: Deploy to dev
@@ -109,8 +110,23 @@ jobs:
           username: ${{ env.EC2_USERNAME }}
           password: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-#           script: "docker-compose pull && docker-compose down && docker-compose up -d"
-
+  #           script: "docker-compose pull && docker-compose down && docker-compose up -d"
+  deploy:
+    needs: ci_cd
+    name: Deploy
+    runs-on: [ self-hosted, label-go ] # AWS ./configure에서 사용할 label명
+    steps:
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      # 3000 -> 80 포트로 수행하도록 지정
+      - name: Docker run
+        run: |
+          docker stop ${{ env.NAME }} && docker rm ${{ env.NAME }} && docker rmi ${{ env.DOCKER_IMAGE }}:latest
+          docker run -d -p 8080:8080 --name empath-api --restart always ${{ env.DOCKER_IMAGE }}:latest
   # slack alarm
   action-slack:
     if: ${{ always() }}
