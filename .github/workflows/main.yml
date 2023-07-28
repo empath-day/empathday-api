@@ -14,7 +14,7 @@ jobs:
       EC2_HOST_DEV: ${{ secrets.EC2_HOST_DEV }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      SLACK_WEBHOOK_URL_CICD: ${{ SLACK_WEBHOOK_URL_CICD }}
+      SLACK_WEBHOOK_URL_CICD: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
       DOCKER_IMAGE: ghcr.io/${{ github.actor }}/empath
     steps:
       # jdk setting
