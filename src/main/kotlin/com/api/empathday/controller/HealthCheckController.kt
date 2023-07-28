@@ -13,6 +13,6 @@ class HealthCheckController {
 
     @GetMapping("/api/health2")
     fun healthCheck2(): String {
-        return "hello world jaemin2"
+        return "hello world jaemin2zzz"
     }
 }
