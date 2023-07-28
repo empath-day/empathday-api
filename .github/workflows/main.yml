@@ -14,7 +14,7 @@ jobs:
       EC2_HOST_DEV: ${{ secrets.EC2_HOST_DEV }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      SLACK_WEBHOOK_URL_CICD: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
+#       SLACK_WEBHOOK_URL_CICD: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
       DOCKER_IMAGE: ghcr.io/${{ github.actor }}/empath
     steps:
       # jdk setting
@@ -140,5 +140,5 @@ jobs:
           author_name: 백엔드 CI/CD to dev
           fields: repo,message,commit,author,job,took
         env:
-          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL_CICD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
         # if: always()  # even if the job fails or is canceled.
