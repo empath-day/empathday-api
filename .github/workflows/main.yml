@@ -76,7 +76,9 @@ jobs:
 
       # gradle build
       - name: Build with Gradle
-        run: ./gradlew build -x test
+        run: |
+          ./gradlew build -x test
+          ./gradlew findJar
 
       # Docker login
       - name: Login to Docker Hub

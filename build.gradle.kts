@@ -57,3 +57,14 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.register("findJar") {
+    doLast {
+        val jarFiles = fileTree("build/libs/").matching {
+            include("*.jar")
+        }.files
+        jarFiles.forEach { jarFile ->
+            println("Jar file: ${jarFile.name}")
+        }
+    }
+}
