@@ -34,18 +34,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Upload application-dev.yml
+      - name: Upload application.yml
         if: contains(github.ref, 'develop')
         run: |
           cd ./src/main/resources
-          echo "${{ env.DEV_YML }}" > ./application-dev.yml
+          echo "${{ env.DEV_YML }}" > ./application.yml
         shell: bash
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: my-artifact
-          path: ./src/main/resources/application-dev.yml
+          path: ./src/main/resources/application.yml
 
       - name: Download Artifact and Update secrets
         if: always()
@@ -57,7 +57,7 @@ jobs:
       - name: Update secrets.DEV_YML
         if: always()
         run: |
-          YML_CONTENT=$(<./src/main/resources/application-dev.yml)
+          YML_CONTENT=$(<./src/main/resources/application.yml)
           echo "DEV_YML=$YML_CONTENT" >> $GITHUB_ENV
 
 
