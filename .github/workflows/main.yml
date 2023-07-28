@@ -14,7 +14,7 @@ jobs:
       EC2_HOST_DEV: ${{ secrets.EC2_HOST_DEV }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_PASSWORD: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+      DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}
     steps:
       # jdk setting
       - uses: actions/checkout@v3
