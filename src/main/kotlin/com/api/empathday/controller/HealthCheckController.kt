@@ -10,4 +10,9 @@ class HealthCheckController {
     fun healthCheck(): String {
         return "hello world jaemin2"
     }
+
+    @GetMapping("/api/health2")
+    fun healthCheck2(): String {
+        return "hello world jaemin2"
+    }
 }
