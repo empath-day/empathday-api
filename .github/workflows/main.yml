@@ -101,15 +101,15 @@ jobs:
           tags: ${{ env.DOCKER_IMAGE }}:latest
 
       # deploy to develop
-      - name: Deploy to dev
-        uses: appleboy/ssh-action@master
-        id: deploy-dev
-        if: contains(github.ref, 'develop')
-        with:
-          host: ${{ env.EC2_HOST_DEV }}
-          username: ${{ env.EC2_USERNAME }}
-          password: ${{ env.SSH_PRIVATE_KEY }}
-          port: 22
+#       - name: Deploy to dev
+#         uses: appleboy/ssh-action@master
+#         id: deploy-dev
+#         if: contains(github.ref, 'develop')
+#         with:
+#           host: ${{ env.EC2_HOST_DEV }}
+#           username: ${{ env.EC2_USERNAME }}
+#           password: ${{ env.SSH_PRIVATE_KEY }}
+#           port: 22
   #           script: "docker-compose pull && docker-compose down && docker-compose up -d"
   deploy:
     needs: ci_cd
