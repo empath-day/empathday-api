@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'openjdk'
+          distribution: 'temurin'
 
       - name: Gradle Caching
         uses: actions/cache@v3
@@ -34,34 +34,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Upload application-dev.yml to Artifacts
-      - name: Upload application-dev.yml
+      - name: Upload application.yml
         if: contains(github.ref, 'develop')
         run: |
           cd ./src/main/resources
-          echo "${{ env.DEV_YML }}" > ./application-dev.yml
+          echo "${{ env.DEV_YML }}" > ./application.yml
         shell: bash
 
-        # Artifact에 application-dev.yml 업로드
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: my-artifact
-          path: ./src/main/resources/application-dev.yml
+          path: ./src/main/resources/application.yml
 
-      # Download application-dev.yml from Artifacts and update secrets.DEV_YML
       - name: Download Artifact and Update secrets
-        if: always() # 항상 실행되도록 설정
+        if: always()
         uses: actions/download-artifact@v2
         with:
           name: my-artifact
           path: ./src/main/resources/
 
       - name: Update secrets.DEV_YML
-        if: always() # 항상 실행되도록 설정
+        if: always()
         run: |
-          YML_CONTENT=$(<./src/main/resources/application-dev.yml)
-          echo "::set-env name=DEV_YML::$YML_CONTENT"
+          YML_CONTENT=$(<./src/main/resources/application.yml)
+          echo "DEV_YML=$YML_CONTENT" >> $GITHUB_ENV
+
 
       # create application-dev.yml
       #       - name: Make application-dev.yml
@@ -139,5 +137,5 @@ jobs:
           author_name: 백엔드 CI/CD to dev
           fields: repo,message,commit,author,job,took
         env:
-          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL_CICD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_CICD }}
         # if: always()  # even if the job fails or is canceled.
