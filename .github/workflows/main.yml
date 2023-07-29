@@ -96,6 +96,8 @@ jobs:
           tags: ${{ env.DOCKER_IMAGE }}:latest
           context: .   # 현재 디렉토리를 빌드 컨텍스트로 설정
           file: ./Dockerfile-dev   # Dockerfile 경로를 지정
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       # Docker login
 #      - name: Login to Docker Hub
