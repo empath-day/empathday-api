@@ -99,6 +99,8 @@ jobs:
           file: ./Dockerfile-dev
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # deploy to develop
   #       - name: Deploy to dev
